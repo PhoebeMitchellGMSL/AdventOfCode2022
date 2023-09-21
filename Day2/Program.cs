@@ -1,4 +1,5 @@
 ﻿const int winScore = 6;
+const int drawScore = 3;
 
 var scores = new Dictionary<char, int>()
 {
@@ -14,6 +15,13 @@ var winningCombinations = new[]
     ('C', 'X')
 };
 
+var drawingCombinations = new[]
+{
+    ('A', 'X'),
+    ('B', 'Y'),
+    ('C', 'Z')
+};
+
 var score = 0;
 using (var streamReader = new StreamReader("input.txt")) {
     while (streamReader.ReadLine() is { } line)
@@ -21,6 +29,11 @@ using (var streamReader = new StreamReader("input.txt")) {
         if (winningCombinations.Contains((line[0], line[2])))
         {
             score += winScore;
+        }
+
+        if (drawingCombinations.Contains((line[0], line[2])))
+        {
+            score += drawScore;
         }
 
         score += scores[line[2]];
