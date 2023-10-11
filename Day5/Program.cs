@@ -26,36 +26,14 @@ for (var i = 0; i < lines.Length; i++)
     }
 }
 
-foreach (var stack in stacks[1..^1])
-{
-    Console.WriteLine(stack.Count);
-    foreach (var a in stack)
-    {
-        Console.Write(a);
-    }
-
-    Console.WriteLine();
-}
-
 foreach (var line in lines[startIndex..])
 {
     var instructions = line.Split(" ").Where(s => int.TryParse(s, out _)).Select(int.Parse).ToArray();
-    for (var i = 0; i < instructions[0]; i++)
-    {
-        if (stacks[instructions[1]].Count > 0)
-        {
-            stacks[instructions[2]].Add(stacks[instructions[1]][^1]);
-            stacks[instructions[1]].RemoveAt(stacks[instructions[1]].Count - 1);
-        }
-    }
+    stacks[instructions[2]].AddRange(stacks[instructions[1]].ToArray()[^instructions[0]..]/*.Reverse()*/ ); // Uncomment Reverse for part 1
+    stacks[instructions[1]].RemoveRange(stacks[instructions[1]].Count - instructions[0], instructions[0]);
 }
 
-foreach (var stack in stacks[1..^1])
+foreach (var stack in stacks[1..])
 {
-    foreach (var a in stack)
-    {
-        Console.Write(a);
-    }
-
-    Console.WriteLine();
+    Console.Write(stack[^1]);
 }
