@@ -1,10 +1,9 @@
 ﻿var lines = File.ReadAllLines("input.txt");
 
-var directorySizes = new Dictionary<string, int>();
-var directoryStack = new Stack<string>();
+var rootDirectory = new Directory();
+var activeDirectory = rootDirectory;
 
-directoryStack.Push("Main");
-directorySizes.Add("Main", 0);
+var directories = new List<Directory>();
 
 foreach (var line in lines)
 {
@@ -16,58 +15,46 @@ foreach (var line in lines)
             switch (splitLine[2])
             {
                 case "..":
-                    GoUpDirectory();
+                    activeDirectory = activeDirectory.ParentDirectory;
                     break;
                 case "/":
-                    while (directoryStack.Count != 1)
-                    {
-                        GoUpDirectory();
-                    }
+                    activeDirectory = rootDirectory;
                     break;
                 default:
-                    directoryStack.Push(splitLine[2]);
-                    directorySizes.TryAdd(splitLine[2], 0);
+                    activeDirectory.Directories.TryAdd(splitLine[2], new Directory(activeDirectory));
+                    activeDirectory = activeDirectory.Directories[splitLine[2]];
+                    directories.Add(activeDirectory);
                     break;
             }
         }
     }
     else if (int.TryParse(splitLine[0], out var size))
     {
-        directorySizes[directoryStack.Peek()] += size;
+        activeDirectory.Files.TryAdd(splitLine[1], 0);
+        activeDirectory.Files[splitLine[1]] += size;
     }
 }
 
-var sum = 0;
-foreach (var line in lines)
-{
-    var a = line.Split(" ");
-    if (int.TryParse(a[0], out var b))
-    {
-        sum += b;
-    }
-}
-Console.WriteLine(sum);
-Console.WriteLine(directorySizes["Main"]);
-
-var directories = directorySizes.Where(pair => pair.Value <= 100000);
-Console.WriteLine(directories.Sum(pair => pair.Value));
-
-return;
-
-void GoUpDirectory()
-{
-    var previousDirectory = directoryStack.Pop();
-    directorySizes[directoryStack.Peek()] += directorySizes[previousDirectory];
-}
+var smallestDirectories = directories.Where(directory => directory.CalculateSize() <= 100000);
+Console.WriteLine(smallestDirectories.Sum(directory => directory.CalculateSize()));
 
 class Directory
 {
-    public Directory ParentDirectory { get; }
-    public List<Directory> Directories { get;  }= new ();
+    public Directory? ParentDirectory { get; }
+    public Dictionary<string, Directory> Directories { get; } = new ();
     public Dictionary<string, int> Files { get; } = new();
+
+    public Directory()
+    {
+    }
 
     public Directory(Directory parentDirectory)
     {
         this.ParentDirectory = parentDirectory;
+    }
+
+    public int CalculateSize()
+    {
+        return Files.Values.Sum() + Directories.Values.Sum(directory => directory.CalculateSize());
     }
 }
