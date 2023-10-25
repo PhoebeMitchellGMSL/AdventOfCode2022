@@ -2,7 +2,6 @@
 
 var rootDirectory = new Directory();
 var activeDirectory = rootDirectory;
-
 var directories = new List<Directory>();
 
 foreach (var line in lines)
@@ -35,8 +34,12 @@ foreach (var line in lines)
     }
 }
 
+const int totalSize = 70000000;
+var freeSize = totalSize - rootDirectory.CalculateSize();
+
 var smallestDirectories = directories.Where(directory => directory.CalculateSize() <= 100000);
 Console.WriteLine(smallestDirectories.Sum(directory => directory.CalculateSize()));
+Console.WriteLine(directories.Where(directory => directory.CalculateSize() + freeSize >= 30000000).Min(directory => directory.CalculateSize()));
 
 class Directory
 {
