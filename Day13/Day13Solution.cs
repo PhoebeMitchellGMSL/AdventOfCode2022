@@ -1,98 +1,115 @@
-﻿namespace Day13;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+
+namespace Day13;
 
 public static class Day13Solution
 {
     public static bool CalculateDay13(string input1, string input2)
     {
-        var splitInput1 = SplitInput(input1);
-        var splitInput2 = SplitInput(input2);
-
-        return Compare(splitInput1, splitInput2);
+        var result = Compare(JsonConvert.DeserializeObject(input1), JsonConvert.DeserializeObject(input2));
+        return result == Result.Valid;
     }
 
-    private static bool Compare(List<string> splitInput1, List<string> splitInput2)
+    private enum Result
     {
-        for (var i = 0; i < Math.Max(splitInput1.Count, splitInput2.Count); i++)
+        Valid,
+        Invalid,
+        Equal
+    }
+
+    private static Result Compare(dynamic json1, dynamic json2)
+    {
         {
-            if (i == splitInput1.Count || splitInput1[i] == "")
+            if (json1 is JValue)
             {
-                return true;
-            }
-
-            if (i == splitInput2.Count || splitInput2[i] == "")
-            {
-                return false;
-            }
-
-            {
-                if (int.TryParse(splitInput1[i], out var i1) && int.TryParse(splitInput2[i], out var i2))
+                if (json2 is JValue)
                 {
-                    if (i1 > i2)
+                    if (json1 < json2)
                     {
-                        return false;
+                        return Result.Valid;
                     }
 
-                    if (i1 < i2)
+                    if (json1 > json2)
                     {
-                        return true;
+                        return Result.Invalid;
+                    }
+                }
+            }
+        }
+        
+        if (json1 is not JValue && json1.Count == 0 && (json2 is JValue || json2.Count > 0))
+        {
+            return Result.Valid;
+        }
+        
+        if (json2 is not JValue && json2.Count == 0 && (json1 is JValue || json1.Count > 0))
+        {
+            return Result.Invalid;
+        }
+        
+        for (var i = 0; i < Math.Max(json1 is JValue ? 0 : json1.Count, json2 is JValue ? 0 : json2.Count); i++)
+        {
+            if (json1 is not JValue && i >= json1.Count || json1 is JValue && i > 0)
+            {
+                return Result.Valid;
+            }
+
+            if (json2 is not JValue && i >= json2.Count || json2 is JValue && i > 0)
+            {
+                return Result.Invalid;
+            }
+
+            {
+                if (json1 is JValue)
+                {
+                    var result = Compare(json1, json2[i]);
+                    if (result == Result.Valid)
+                    {
+                        return Result.Valid;
                     }
 
+                    if (result == Result.Invalid)
+                    {
+                        return Result.Invalid;
+                    }
+                    
                     continue;
                 }
             }
 
-            var split1 = SplitInput(splitInput1[i]);
-            var split2 = SplitInput(splitInput2[i]);
-            var result = Compare(split1, split2);
-
-            if (!result)
             {
-                return false;
+                if (json2 is JValue)
+                {
+                    var result = Compare(json1[i], json2);
+                    if (result == Result.Valid)
+                    {
+                        return Result.Valid;
+                    }
+
+                    if (result == Result.Invalid)
+                    {
+                        return Result.Invalid;
+                    }
+                    
+                    continue;
+                }
+            }
+
+            {
+                var result = Compare(json1[i], json2[i]);
+                if (result == Result.Valid)
+                {
+                    return Result.Valid;
+                }
+
+                if (result == Result.Invalid)
+                {
+                    return Result.Invalid;
+                }
             }
         }
-
-        return true;
-    }
-
-    private static List<string> SplitInput(string input)
-    {
-        if (input.Length == 1)
-        {
-            return [input];
-        }
         
-        if (int.TryParse(input[1..^1], out var i1))
-        {
-            return [i1.ToString()];
-        }
-        
-        var bracketDepth = 0;
-        var previousSplitPoint = 1;
-        var splitInput = new List<string>();
-        for (var i = 0; i < input.Length; i++)
-        {
-            switch (input[i])
-            {
-                case '[':
-                    bracketDepth++;
-                    break;
-                case ']':
-                    bracketDepth--;
-                    if (bracketDepth == 0)
-                    {
-                        splitInput.Add(input[previousSplitPoint..i]);
-                    }
-                    break;
-                case ',':
-                    if (bracketDepth == 1)
-                    {
-                        splitInput.Add(input[previousSplitPoint..i]);
-                        previousSplitPoint = i + 1;
-                    }
-                    break;
-            }
-        }
-
-        return splitInput;
+        return Result.Equal;
     }
 }
