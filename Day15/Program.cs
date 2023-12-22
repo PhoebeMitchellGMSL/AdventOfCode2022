@@ -57,15 +57,70 @@ for (var x = minPos.X - manhattanDistances.Max(); x <= maxPos.X + manhattanDista
         invalidCount++;
     }
 }
-
 Console.WriteLine(invalidCount);
+
+// Part 2
+var boundaryPositions = new List<Vector2Int>();
+for (var i = 0; i < sensorPositions.Count; i++)
+{
+    var top = sensorPositions[i] + new Vector2Int(0, manhattanDistances[i] + 1);
+    var bottom = sensorPositions[i] - new Vector2Int(0, manhattanDistances[i] + 1);
+    var left = sensorPositions[i] - new Vector2Int(manhattanDistances[i] + 1, 0);
+    var right = sensorPositions[i] + new Vector2Int(manhattanDistances[i] + 1, 0);
+
+    var p = top;
+    while (p != right)
+    {
+        boundaryPositions.Add(p);
+        p.X += 1;
+        p.Y -= 1;
+    }
+    while (p != bottom)
+    {
+        boundaryPositions.Add(p);
+        p.X -= 1;
+        p.Y -= 1;
+    }
+    while (p != left)
+    {
+        boundaryPositions.Add(p);
+        p.X -= 1;
+        p.Y += 1;
+    }
+    while (p != top)
+    {
+        boundaryPositions.Add(p);
+        p.X += 1;
+        p.Y += 1;
+    }
+}
+
+const int boundary = 4000000;
+
+foreach (var position in boundaryPositions)
+{
+    if (position.X < 0 || position.X > boundary || position.Y < 0 || position.Y > boundary)
+    {
+        continue;
+    }
+
+    if (sensorIndices.All(i => (position - sensorPositions[i]).Manhattan > manhattanDistances[i]))
+    {
+        Console.WriteLine((decimal)position.X * 4000000 + position.Y);
+        break;
+    }
+}
 
 internal struct Vector2Int(int x, int y)
 {
     public int X { get; set; } = x;
     public int Y { get; set;  } = y;
 
+    public static Vector2Int operator +(Vector2Int a, Vector2Int b) => new (a.X + b.X, a.Y + b.Y);
     public static Vector2Int operator -(Vector2Int a, Vector2Int b) => new (a.X - b.X, a.Y - b.Y);
+    public static Vector2Int operator /(Vector2Int a, int b) => new(a.X / b, a.Y / b);
+    public static bool operator ==(Vector2Int a, Vector2Int b) => a.X == b.X && a.Y == b.Y;
+    public static bool operator !=(Vector2Int a, Vector2Int b) => a.X != b.X || a.Y != b.Y;
 
     public int Manhattan => Math.Abs(X) + Math.Abs(Y);
 }
