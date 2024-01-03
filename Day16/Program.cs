@@ -43,39 +43,33 @@ foreach (var x in valveFlowRates.Keys)
 
 var interestedValves = valveFlowRates.Where(pair => pair.Value != 0 || pair.Key == "AA").Select(pair => pair.Key);
 
-var pressuresAndValves = new List<(int, List<string>)>();
+var pressuresAndValvesDict = new Dictionary<HashSet<string>, int>(HashSet<string>.CreateSetComparer());
 
 Evaluate("AA", 26, 0, [..interestedValves], []);
 // Console.WriteLine(pressuresAndValves.Max());
 
-var results = pressuresAndValves.Where(x => x.Item2.Count != 1).OrderByDescending(x => x.Item1).ToList();
+var results = pressuresAndValvesDict.OrderByDescending(x => x.Value).ToList();
 
-var best = (0, 0, new List<string>(), new List<string>());
+var best = (0, 0, new HashSet<string>(), new HashSet<string>());
 
-var counter = 0;
 foreach (var result in results)
 {
     foreach (var r in results)
     {
-        if (result == r)
+        if (result.Key.SetEquals(r.Key))
         {
             continue;
         }
 
-        if (result.Item1 + r.Item1 <= best.Item1 + best.Item2)
+        if (result.Value + r.Value <= best.Item1 + best.Item2)
         {
             continue;
         }
         
-        if (result.Item2.All(x => r.Item2.All(y => x != y)))
+        if (result.Key.All(x => r.Key.All(y => x != y)))
         {
-            best = (result.Item1, r.Item1, result.Item2, r.Item2);
+            best = (result.Value, r.Value, result.Key, r.Key);
         }
-    }
-    counter++;
-    if (counter > 3000)
-    {
-        break;
     }
 }
 
@@ -92,12 +86,27 @@ Console.WriteLine();
 Console.WriteLine($"{best.Item1} + {best.Item2} = {best.Item1 + best.Item2}");
 return;
 
-void AddPressure(int pressure, List<string> visited)
+void AddPressure(int pressure, HashSet<string> visited)
 {
-    pressuresAndValves.Add((pressure, [..visited]));
+    if (visited.Count == 1)
+    {
+        return;
+    }
+    
+    if (pressuresAndValvesDict.TryGetValue(visited, out var p))
+    {
+        if (pressure > p)
+        {
+            pressuresAndValvesDict[visited] = pressure;
+        }
+    }
+    else
+    {
+        pressuresAndValvesDict.Add([..visited], p);
+    }
 }
 
-void Evaluate(string id, int time, int pressure, List<string> remainingValves, List<string> visited)
+void Evaluate(string id, int time, int pressure, List<string> remainingValves, HashSet<string> visited)
 {
     if (time <= 0)
     {
