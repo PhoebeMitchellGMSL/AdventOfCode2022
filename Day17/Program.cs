@@ -1,9 +1,10 @@
-﻿var input = File.ReadAllText("input.txt");
+﻿var input = File.ReadAllLines("input.txt")[0];
+Console.WriteLine(input.Length);
 
 var chamber = new Chamber();
 var jetIndex = 0;
 
-for (long i = 0; i < 5000; i++)
+for (long i = 0; i < 10000; i++)
 {
     var rockIndex = i % 5;
     
@@ -78,17 +79,17 @@ for (long i = 0; i < 5000; i++)
             yPositions[j] -= 1;
         }
     }
-
-    for (var j = 0; j < xPositions.Length; j++)
-    {
-        chamber.SetPosition(xPositions[j], yPositions[j]);
-    }
+    
+    // chamber.Print(xPositions, yPositions);
+    // Console.WriteLine();
+    chamber.SetPositions(xPositions, yPositions);
 }
 
 // chamber.Print(Array.Empty<int>(), Array.Empty<int>());
-var a = chamber.CheckForPattern();
-Console.WriteLine(chamber.HighestRock);
-Console.WriteLine((a.Item2 / a.Item3) * 1000000000000 + a.Item1);
+var patternData = chamber.CheckForPattern();
+var remainder = (int)((1000000000000 - patternData.Item4 - 1) % patternData.Item3);
+var repeatedCount = (1000000000000 - patternData.Item4 - 1) / patternData.Item3;
+Console.WriteLine(patternData.Item2 * repeatedCount + patternData.Item1 + patternData.Item5[..(remainder + 1)].Sum());
 
 internal class Chamber
 {
@@ -106,30 +107,34 @@ internal class Chamber
         }
     }
 
-    public (int, int, int) CheckForPattern()
+    public (int, int, int, int, List<int>) CheckForPattern()
     {
-        var longest = (0, 0, 0);
+        var longest = (0, 0, 0, 0, new List<int>());
         for (var i = 0; i < heightDifferences.Count / 2; i++)
         {
-            for (var j = i + 2; j < heightDifferences.Count - (j - i); j++)
+            for (var j = i + 2; j < heightDifferences.Count - j - (j - i); j++)
             {
-                if (heightDifferences[i] == heightDifferences[j])
+                if (heightDifferences[i] == heightDifferences[j] && heightDifferences[j] == heightDifferences[j + (j - i)])
                 {
                     for (var k = 0; k < j - i; k++)
                     {
-                        if (heightDifferences[i + k] != heightDifferences[j + k])
+                        if (heightDifferences[i + k] != heightDifferences[j + k] ||
+                            heightDifferences[j + k] != heightDifferences[j + (j - i) + k] ||
+                            heightDifferences[i + k] != heightDifferences[j + (j - i) + k])
                         {
-                            Console.WriteLine();
+                            // Console.WriteLine();
                             break;
                         }
-                        
-                        Console.WriteLine($"{i + k}: {heightDifferences[i + k]}, {j + k}: {heightDifferences[j + k]}");
+            
+                        // Console.Write($"{heightDifferences[i + k]} + ");
+                        // Console.WriteLine($"{i + k}: {heightDifferences[i + k]}, {j + k}: {heightDifferences[j + k]}, {j + (j - i) + k}: {heightDifferences[j + (j - i) + k]}");
 
                         if (i + k == j - 1)
                         {
-                            if (k > longest.Item2)
+                            if (k > longest.Item3)
                             {
-                                longest = (heightDifferences[..i].Sum(), heightDifferences[i..(i + k)].Sum(), k);
+                                longest = (heightDifferences[..i].Sum(), heightDifferences[i..j].Sum(), k + 1, i, heightDifferences[i..j]);
+                                // Console.WriteLine(((longest.Item2 / longest.Item3) * 1000000000000 + longest.Item1));
                             }
                         }
                     }
@@ -140,20 +145,28 @@ internal class Chamber
         return longest;
     }
 
-    public void SetPosition(int x, int y)
+    public void SetPositions(int[] xPositions, int[] yPositions)
     {
-        if (y > HighestRock - 1)
+        var height = HighestRock;
+        for (var i = 0; i < xPositions.Length; i++)
         {
-            var difference = y + 1 - (HighestRock - 1);
-            heightDifferences.Add(difference);
-            foreach (var column in columns)
+            var y = yPositions[i];
+            if (y > HighestRock - 1)
             {
-                column.AddRange(new bool[difference]);
+                var difference = int.Max(0, y - (HighestRock - 1));
+                foreach (var column in columns)
+                {
+                    column.AddRange(new bool[difference]);
+                }
+
+                HighestRock = y + 1;
             }
-            HighestRock = y + 1;
+            
+            columns[xPositions[i]][y] = true;
         }
-        
-        columns[x][y] = true;
+
+        var heightDifference = HighestRock - height;
+        heightDifferences.Add(heightDifference);
     }
 
     public bool GetPosition(int x, int y)
