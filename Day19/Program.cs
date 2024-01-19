@@ -22,7 +22,6 @@ foreach (var line in lines)
     datas.Enqueue(new Data
     {
         oreRobots = 1,
-        id = int.Parse(splitLine[1].Replace(":", string.Empty)),
         oreRobotBlueprint = oreRobotBlueprint,
         clayRobotBlueprint = clayRobotBlueprint,
         obsidianRobotBlueprint = obsidianRobotBlueprint,
@@ -38,7 +37,9 @@ foreach (var line in lines)
     qualities.Add(pathQualities.Max());
 }
 
-Console.WriteLine(qualities.Sum());
+var p = qualities.Aggregate(1, (current, q) => current * q);
+
+Console.WriteLine(p);
 
 void CalculatePath(
     Data data,
@@ -49,14 +50,13 @@ void CalculatePath(
         return;
     }
     
-    for (var i = data.startMinute; i < 24; i++)
+    for (var i = data.startMinute; i < 32; i++)
     {
         if (!data.ignoreGeode && data.obsidian >= data.geodeRobotBlueprint.obsidian && data.ore >= data.geodeRobotBlueprint.ore)
         {
             var d = data;
             d.ignoreGeode = true;
             d.startMinute = i;
-            d.previousIgnored = "geode";
             datas.Enqueue(d);
             data.obsidian -= data.geodeRobotBlueprint.obsidian;
             data.ore -= data.geodeRobotBlueprint.ore;
@@ -67,7 +67,6 @@ void CalculatePath(
             var d = data;
             d.ignoreObsidian = true;
             d.startMinute = i;
-            d.previousIgnored = "obsidian";
             datas.Enqueue(d);
             data.clay -= data.obsidianRobotBlueprint.clay;
             data.ore -= data.obsidianRobotBlueprint.ore;
@@ -78,7 +77,6 @@ void CalculatePath(
             var d = data;
             d.ignoreClay = true;
             d.startMinute = i;
-            d.previousIgnored = "clay";
             datas.Enqueue(d);
             data.ore -= data.clayRobotBlueprint.ore;
             data.clayRobotsBuffer++;
@@ -88,7 +86,6 @@ void CalculatePath(
             var d = data;
             d.ignoreOre = true;
             d.startMinute = i;
-            d.previousIgnored = "ore";
             datas.Enqueue(d);
             data.ore -= data.oreRobotBlueprint.ore;
             data.oreRobotsBuffer++;
@@ -115,7 +112,7 @@ void CalculatePath(
         data.geodeRobotsBuffer = 0;
     }
     
-    data.pathQualities.Add(data.id * data.geode);
+    data.pathQualities.Add(data.geode);
 }
 
 internal struct Blueprint
@@ -127,8 +124,6 @@ internal struct Blueprint
 
 internal struct Data(int id)
 {
-    public int id = id;
-
     public int startMinute;
     
     public int ore = 0;
@@ -155,5 +150,4 @@ internal struct Data(int id)
     public bool ignoreObsidian = false;
     public bool ignoreClay = false;
     public bool ignoreOre = false;
-    public string previousIgnored;
 }
