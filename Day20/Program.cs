@@ -1,50 +1,32 @@
-﻿var input = File.ReadAllLines("input.txt").Select((s, i) => new Position { Value = int.Parse(s)}).ToList();
-var output = new List<Position>(input);
+﻿var input = File.ReadAllLines("input.txt").Select(i => int.Parse(i) * 811589153).ToList();
+var indices = input.Select((_, i) => i).ToList();
 
-foreach (var position in input)
+for (var j = 0; j < 10; j++)
 {
-    var index = output.IndexOf(position);
-    var next = index + position.Value;
-    
-    if (next == 0)
+    for (var i = 0; i < input.Count; i++)
     {
-        output.Add(position);
-        output.RemoveAt(index);
-    }
-    
-    if (next > 0 && next < input.Count)
-    {
-        output.RemoveAt(index);
-        output.Insert(Mod(index + position.Value, input.Count), position);
-    }
-    
-    if (next < 0)
-    {
-        output.Insert(Mod(index + position.Value, input.Count), position);
-        output.RemoveAt(index);
-    }
+        var index = indices.IndexOf(i);
+        var move = index + input[i];
+        indices.Remove(i);
 
-    if (next >= input.Count)
-    {
-        output.RemoveAt(index);
-        output.Insert(Mod(index + position.Value + 1, input.Count), position);
+        if (move == 0)
+        {
+            indices.Add(i);
+            continue;
+        }
+
+        indices.Insert(Mod(move, indices.Count), i);
     }
-    
-    // var a = output.Select(p => p.Value).ToList();
-    // foreach (var b in a)
-    // {
-    //     Console.Write($"{b} ");
-    // }
-    // Console.WriteLine();
 }
 
-var o = output.Select(p => p.Value).ToList();
-foreach (var i in o)
+foreach (var i in indices)
 {
-    Console.Write($"{i} ");
+    Console.Write($"{input[i]} ");
 }
 Console.WriteLine();
 
+var o = new List<int>();
+o.AddRange(indices.Select(i => input[i]));
 var zeroIndex = o.IndexOf(0);
 Console.WriteLine(o[(1000 + zeroIndex) % input.Count] + o[(2000 + zeroIndex) % input.Count] + o[(3000 + zeroIndex) % input.Count]);
 
