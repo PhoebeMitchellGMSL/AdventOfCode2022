@@ -1,98 +1,61 @@
-﻿var input = File.ReadAllLines("input.txt").Select((s, i) => (i, int.Parse(s))).ToList();
+﻿var input = File.ReadAllLines("input.txt").Select((s, i) => new Position { Value = int.Parse(s)}).ToList();
+var output = new List<Position>(input);
 
-
-var zeroIndex2 = File.ReadAllLines("input.txt").Select(int.Parse).ToList().IndexOf(0);
-
-for (var i = 0; i < input.Count; i++)
+foreach (var position in input)
 {
-    var pair = input[i];
+    var index = output.IndexOf(position);
+    var next = index + position.Value;
     
-    var oldIndex = input[i].Item1;
-    var negative = pair.Item1 + pair.Item2 <= 0 ? -1 : 0;
-    var positive = pair.Item1 + pair.Item2 > input.Count ? 1 : 0;
-    var newIndex = Mod(pair.Item1 + pair.Item2 + negative + positive, input.Count) ;
-    
-    pair.Item1 = newIndex;
-    
-    var sign = Math.Sign(newIndex - oldIndex);
-
-    for (var j = 0; j < input.Count; j++)
+    if (next == 0)
     {
-        if (i == j)
-        {
-            continue;
-        }
-        
-        if (input[j].Item1 > oldIndex && input[j].Item1 <= newIndex)
-        {
-            var p = input[j];
-            p.Item1--;
-            input[j] = p;
-        }
-        else if (input[j].Item1 >= newIndex && input[j].Item1 < oldIndex)
-        {
-            var p = input[j];
-            p.Item1++;
-            input[j] = p;
-        }
+        output.Add(position);
+        output.RemoveAt(index);
     }
     
-    input[i] = pair;
-    // foreach (var a in input.OrderBy(p => p.Item1).Select(p => p.Item2).ToList())
+    if (next > 0 && next < input.Count)
+    {
+        output.RemoveAt(index);
+        output.Insert(Mod(index + position.Value, input.Count), position);
+    }
+    
+    if (next < 0)
+    {
+        output.Insert(Mod(index + position.Value, input.Count), position);
+        output.RemoveAt(index);
+    }
+
+    if (next >= input.Count)
+    {
+        output.RemoveAt(index);
+        output.Insert(Mod(index + position.Value + 1, input.Count), position);
+    }
+    
+    // var a = output.Select(p => p.Value).ToList();
+    // foreach (var b in a)
     // {
-    //     Console.Write($"{a} ");
+    //     Console.Write($"{b} ");
     // }
-    //
     // Console.WriteLine();
 }
 
-var output = input.OrderBy(p => p.Item1).Select(p => p.Item2).ToList();
-foreach (var a in output)
+var o = output.Select(p => p.Value).ToList();
+foreach (var i in o)
 {
-    Console.Write($"{a} ");
+    Console.Write($"{i} ");
 }
-
 Console.WriteLine();
-var zeroIndex = output.IndexOf(0);
-Console.WriteLine(output[(1000 + zeroIndex) % output.Count] + output[(2000 + zeroIndex) % output.Count] + output[(3000 + zeroIndex) % output.Count]);
 
-// var indexes = new int[input.Count];
-//
-// for (var i = 0; i < indexes.Length; i++)
-// {
-//     indexes[i] = i;
-// }
-//
-// for (var i = 0; i < input.Count; i++)
-// {
-//     var move = input[indexes[i]];
-//     var moveSign = Math.Sign(move);
-//     for (var j = 0; j != move; j += moveSign)
-//     {
-//         var index = Mod(indexes[i] + moveSign, input.Count);
-//         (input[indexes[i]], input[index]) = (input[index], input[indexes[i]]);
-//         for (var k = 0; k < indexes.Length; k++)
-//         {
-//             if (indexes[k] == input[input])
-//             {
-//                 indexes[k] = Mod(indexes[k] - moveSign, indexes.Length);
-//             }
-//         }
-//         indexes[i] = Mod(indexes[i] + moveSign, input.Count);
-//         var a = Mod(i + moveSign, indexes.Length);
-//         var b = Mod(indexes[Mod(i + moveSign, indexes.Length)] - moveSign, input.Count);
-//         
-//     }
-// }
-
-// foreach (var i in input)
-// {
-//     Console.WriteLine(i);
-// }
+var zeroIndex = o.IndexOf(0);
+Console.WriteLine(o[(1000 + zeroIndex) % input.Count] + o[(2000 + zeroIndex) % input.Count] + o[(3000 + zeroIndex) % input.Count]);
 
 return;
 
 int Mod(int a, int b)
 {
     return a - b * (int)Math.Floor(a / (float)b);
+}
+
+internal class Position
+{
+    public int Value;
 }
