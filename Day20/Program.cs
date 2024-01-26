@@ -1,4 +1,4 @@
-﻿var input = File.ReadAllLines("input.txt").Select(i => int.Parse(i) * 811589153).ToList();
+﻿var input = File.ReadAllLines("input.txt").Select(i => long.Parse(i) * 811589153).ToList();
 var indices = input.Select((_, i) => i).ToList();
 
 for (var j = 0; j < 10; j++)
@@ -25,19 +25,14 @@ foreach (var i in indices)
 }
 Console.WriteLine();
 
-var o = new List<int>();
+var o = new List<long>();
 o.AddRange(indices.Select(i => input[i]));
 var zeroIndex = o.IndexOf(0);
 Console.WriteLine(o[(1000 + zeroIndex) % input.Count] + o[(2000 + zeroIndex) % input.Count] + o[(3000 + zeroIndex) % input.Count]);
 
 return;
 
-int Mod(int a, int b)
+int Mod(long a, long b)
 {
-    return a - b * (int)Math.Floor(a / (float)b);
-}
-
-internal class Position
-{
-    public int Value;
+    return (int)(a - b * (long)Math.Floor(a / (double)b));
 }
